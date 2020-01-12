@@ -3,7 +3,7 @@ import keras
 
 class SpectralDataGenerator(keras.utils.Sequence):
     #generates augmented audio data and return their MFCCs in batches
-    def __init__(self, ID_list, labels, batch_size=32, dim=(64,64,1), channels=1, n_classes=10, shuffle=True):
+    def __init__(self, ID_list, labels, batch_size=32, dim=(32,32,32), channels=1, n_classes=10, shuffle=True):
         # init
         self.dim = dim
         self.batch_size = batch_size
@@ -27,9 +27,8 @@ class SpectralDataGenerator(keras.utils.Sequence):
         y = np.empty((self.batch_size), dtype=int)
 
         #data generation
-        # for i, ID in enumerate(temp_ID_list):
-        #     break
-        # pass
+        for i, ID in enumerate(temp_ID_list):
+            break        
 
     def __len__(self):
         #denotes number of batches per epoch
