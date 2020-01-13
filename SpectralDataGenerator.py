@@ -2,8 +2,8 @@ import numpy as np
 import keras
 
 class SpectralDataGenerator(keras.utils.Sequence):
-    #Generates augmented audio data and return their MFCCs in batches
-    def __init__(self, audio, labels, batch_size=32, dim=(32,32), channels=1, n_classes=10, shuffle=True):
+    #Generates randomly noisy audio data and return their MFCCs in batches
+    def __init__(self, audio, labels, batch_size=32, dim=(32,32), channels=1, n_classes=10, shuffle=True,noise_factor = 0):
         # init
         self.dim = dim
         self.batch_size = batch_size
@@ -13,6 +13,7 @@ class SpectralDataGenerator(keras.utils.Sequence):
         self.n_classes = n_classes
         self.shuffle = shuffle
         self.ID_list = list(range(0,(len(self.audio)-1)))
+        self.noise_factor = noise_factor
         self.on_epoch_end()
 
     def on_epoch_end(self):
@@ -41,9 +42,11 @@ class SpectralDataGenerator(keras.utils.Sequence):
 
         return X,y
 
-    def extract_normalized_mfcc(audio):
+    def extract_normalized_mfcc(self,audio):
         #Extracts MFCCs from a single audio sample.
         max_padding = 175
+        #add noise before MFCC extraction
+        audio = add_noise(audio)
         try:
             mfccs = librosa.feature.mfcc(y=audio, n_mfcc=40)
             pad_width = max_padding - mfccs.shape[1]
@@ -51,12 +54,19 @@ class SpectralDataGenerator(keras.utils.Sequence):
             std = np.std(mfccs)
             mfccs = (mfccs-mean)/std #normalize the MFCCs before padding
             mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
+        
         except Exception as e:
             print(e,file)
             return None
      
         return mfccs
     
+    def add_noise(self,data):
+        noise = np.random.randn(len(data))
+        augmented_data = data+self.noise_factor+noise
+        augmented_data = augmented_data.astype(type(data[0]))
+        return augmented_data
+
     def __getitem__(self, index):
         #Generates a single batch of data
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size] #generates batch indices
