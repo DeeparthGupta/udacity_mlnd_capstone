@@ -1,5 +1,6 @@
 import numpy as np
 import keras
+import librosa
 
 class SpectralDataGenerator(keras.utils.Sequence):
     #Generates randomly noisy audio data and return their MFCCs in batches
@@ -22,31 +23,19 @@ class SpectralDataGenerator(keras.utils.Sequence):
         if self.shuffle == True:
             np.random.shuffle(self.indexes)
 
-    def __len__(self):
-        #Denotes number of batches per epoch
-        return int(np.floor(len(self.ID_list) / (self.batch_size)))
-    
-    def __datagen(self,temp_ID_list):
-        # Generate batch_size samples
-        # init
-        X = np.empty((self.batch_size, *self.dim, self.channels))
-        y = np.empty((self.batch_size))
 
-        #data generation
-        for i, ID in enumerate(temp_ID_list):
-            #convert audio to MFCC and store
-            X[i] = extract_normalized_mfcc(self.audio[ID])
-            
-            #store labels
-            y[i] = self.lables[ID]
+    def add_noise(self,data,noise_factor):
+        noise = np.random.randn(len(data))
+        augmented_data = data+noise_factor+noise
+        augmented_data = augmented_data.astype(type(data[0]))
+        return augmented_data
 
-        return X,y
 
-    def extract_normalized_mfcc(self,audio):
+    def extract_mfcc(self,audio):
         #Extracts MFCCs from a single audio sample.
         max_padding = 175
         #add noise before MFCC extraction
-        audio = add_noise(audio)
+        audio = add_noise(audio,self.noise_factor)
         try:
             mfccs = librosa.feature.mfcc(y=audio, n_mfcc=40)
             pad_width = max_padding - mfccs.shape[1]
@@ -56,16 +45,32 @@ class SpectralDataGenerator(keras.utils.Sequence):
             mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
         
         except Exception as e:
-            print(e,file)
+            print(e)
             return None
      
         return mfccs
+
+
+    def __len__(self):
+        #Denotes number of batches per epoch
+        return int(np.floor(len(self.ID_list) / (self.batch_size)))
     
-    def add_noise(self,data):
-        noise = np.random.randn(len(data))
-        augmented_data = data+self.noise_factor+noise
-        augmented_data = augmented_data.astype(type(data[0]))
-        return augmented_data
+
+    def __datagen(self,temp_ID_list):
+        # Generate batch_size samples
+        # init
+        X = np.empty((self.batch_size, *self.dim, self.channels))
+        y = np.empty((self.batch_size))
+
+        #data generation
+        for i, ID in enumerate(temp_ID_list):
+            #convert audio to MFCC and store
+            X[i] = extract_mfcc(self.audio[ID])
+            
+            #store labels
+            y[i] = self.lables[ID]
+
+        return X,y
 
     def __getitem__(self, index):
         #Generates a single batch of data
