@@ -131,4 +131,5 @@ dmypy.json
 
 data/UrbanSound8k
 data/dataset.npz
+data/sample_sounds
 .vscode
