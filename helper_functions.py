@@ -11,7 +11,7 @@ def extract_MFCC(audio):
         mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
         
     except Exception as e:
-        print(e,file)
+        print(e)
         return None
      
     return mfccs
