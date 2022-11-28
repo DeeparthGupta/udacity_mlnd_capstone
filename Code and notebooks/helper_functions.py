@@ -2,7 +2,6 @@ import os
 import struct
 
 import numpy as np
-
 import librosa
 from scipy.io import wavfile as wav
 
